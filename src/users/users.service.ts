@@ -54,7 +54,8 @@ export class UsersService {
   }
 
   async update(id: number, dto: UpdateUserDto): Promise<User> {
-    if (Object.keys(dto).length === 0) {
+    const hasFields = Object.values(dto).some((v) => v !== undefined);
+    if (!hasFields) {
       throw new BadRequestException('Send at least one field to update');
     }
     const user = await this.findOne(id);
