@@ -7,6 +7,8 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { envValidationSchema } from './config/env.validation';
 import { UsersModule } from './users/users.module';
+import { CategoriesModule } from './categories/categories.module.js';
+import { CoursesModule } from './courses/courses.module.js';
 
 @Module({
   imports: [
@@ -26,7 +28,11 @@ import { UsersModule } from './users/users.module';
     }),
     UsersModule,
     AuthModule,
+    CategoriesModule,
+    CoursesModule,
+    
     // Teammates add their modules here
+    
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard }, // 1st: are you logged in?
