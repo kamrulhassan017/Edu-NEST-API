@@ -6,7 +6,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Course } from '../courses/course.entity';
+import { Course } from '../courses/course.entity.js';
 
 @Entity('categories')
 export class Category {
