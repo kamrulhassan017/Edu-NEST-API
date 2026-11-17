@@ -8,6 +8,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { envValidationSchema } from './config/env.validation';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module.js';
+import { CoursesModule } from './courses/courses.module.js';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CategoriesModule } from './categories/categories.module.js';
     UsersModule,
     AuthModule,
     CategoriesModule,
+    CoursesModule,
     
     // Teammates add their modules here
     
