@@ -1,23 +1,32 @@
 
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
 
 export class QueryCourseDto extends PaginationQueryDto {
-  @IsOptional()
-  @IsString({
-    message: 'Search must be a string',
+  @ApiPropertyOptional({
+    description: 'Search courses by title',
+    example: 'NestJS',
   })
+  @IsOptional()
+  @IsString()
   search?: string;
 
+  @ApiPropertyOptional({
+    description: 'Filter courses by category ID',
+    example: 1,
+    type: Number,
+  })
   @IsOptional()
   @Type(() => Number)
-  @IsInt({
-    message: 'Category ID must be an integer',
-  })
-  @Min(1, {
-    message: 'Category ID must be at least 1',
-  })
+  @IsInt()
+  @Min(1)
   categoryId?: number;
 }
