@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { envValidationSchema } from './config/env.validation';
+import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { LessonsModule } from './lessons/lessons.module';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module.js';
 import { CoursesModule } from './courses/courses.module.js';
@@ -30,9 +32,8 @@ import { CoursesModule } from './courses/courses.module.js';
     AuthModule,
     CategoriesModule,
     CoursesModule,
-    
-    // Teammates add their modules here
-    
+    LessonsModule,
+    EnrollmentsModule
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard }, // 1st: are you logged in?
