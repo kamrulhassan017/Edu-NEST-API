@@ -25,6 +25,18 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Ismail's Member 3 contribution
+
+Lessons, enrollments, payments and the transaction/rollback demo from
+`EduNest_Guide_Ismail.pdf` are implemented on `feature/ismail-enrollments`.
+The full application still requires the team's missing `src/courses` module;
+no replacement Course implementation is included here.
+
+- [Integration handoff and test instructions](docs/ismail-handoff.md)
+- [Report chapters 5, 7 and 8](docs/ismail-report.md)
+- [Postman collection: PDF tests 1–14](docs/ismail.postman_collection.json)
+- [Rollback verification SQL](docs/ismail-rollback-check.sql)
+
 ## Project setup
 
 ```bash

@@ -1,0 +1,181 @@
+{
+  "info": {
+    "name": "EduNest — Ismail Member 3 (PDF tests 1–14)",
+    "description": "Run in order on an isolated development database after Course integration. See docs/ismail-handoff.md for account setup. Create a fresh course with 2 seats and no enrollments. Set local token variables. Pause before/after request 10 for SQL rollback screenshots. These assertions are expectations, not recorded test results.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "courseId", "value": "1" },
+    { "key": "missingCourseId", "value": "999" },
+    { "key": "lessonId", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "instructorToken", "value": "" },
+    { "key": "otherInstructorToken", "value": "" },
+    { "key": "studentToken", "value": "" },
+    { "key": "student2Token", "value": "" },
+    { "key": "student3Token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 — Owner creates lesson (201)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/lessons",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{instructorToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"courseId\": {{courseId}}, \"title\": \"Intro to NestJS\", \"content\": \"Modules, controllers, services\", \"position\": 1}", "options": { "raw": { "language": "json" } } }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Created', () => pm.response.to.have.status(201));",
+        "if (pm.response.code === 201) pm.collectionVariables.set('lessonId', pm.response.json().id);"
+      ] } }]
+    },
+    {
+      "name": "02 — Student cannot create lesson (403)",
+      "request": {
+        "method": "POST", "url": "{{baseUrl}}/lessons",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"courseId\": {{courseId}}, \"title\": \"Intro to NestJS\", \"content\": \"Modules, controllers, services\", \"position\": 1}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Forbidden', () => pm.response.to.have.status(403));"] } }]
+    },
+    {
+      "name": "03 — Missing course (404)",
+      "request": {
+        "method": "POST", "url": "{{baseUrl}}/lessons",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{instructorToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"courseId\": {{missingCourseId}}, \"title\": \"X1\", \"content\": \"y\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Not found', () => pm.response.to.have.status(404));"] } }]
+    },
+    {
+      "name": "04 — Student reads ordered lessons (200)",
+      "request": {
+        "method": "GET", "url": "{{baseUrl}}/courses/{{courseId}}/lessons",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }] }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('OK', () => pm.response.to.have.status(200));",
+        "pm.test('Ordered by position then id', () => { const rows = pm.response.json(); pm.expect(rows).to.be.an('array'); pm.expect(rows).to.deep.equal([...rows].sort((a, b) => a.position - b.position || a.id - b.id)); });"
+      ] } }]
+    },
+    {
+      "name": "05 — Other instructor cannot update lesson (403)",
+      "request": {
+        "method": "PATCH", "url": "{{baseUrl}}/lessons/{{lessonId}}",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{otherInstructorToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"title\": \"Hacked\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Forbidden', () => pm.response.to.have.status(403));"] } }]
+    },
+    {
+      "name": "06 — Student 1 enrolls; seats 2 to 1 (201)",
+      "request": {
+        "method": "POST", "url": "{{baseUrl}}/enrollments",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"courseId\": {{courseId}}, \"method\": \"bkash\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Created', () => pm.response.to.have.status(201));",
+        "pm.test('Payment and seat updated', () => { const body = pm.response.json(); pm.expect(body.course.availableSeats).to.equal(1); pm.expect(body.payment.method).to.equal('bkash'); pm.expect(body.payment.status).to.equal('paid'); pm.expect(body.payment.amount).to.equal(body.course.price); pm.expect(body.student).not.to.have.property('password'); });"
+      ] } }]
+    },
+    {
+      "name": "07 — Duplicate enrollment (409)",
+      "request": {
+        "method": "POST", "url": "{{baseUrl}}/enrollments",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"courseId\": {{courseId}}, \"method\": \"bkash\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Conflict', () => pm.response.to.have.status(409));"] } }]
+    },
+    {
+      "name": "08 — Invalid payment method (400)",
+      "request": {
+        "method": "POST", "url": "{{baseUrl}}/enrollments",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"courseId\": {{courseId}}, \"method\": \"cash\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Bad request', () => pm.response.to.have.status(400));"] } }]
+    },
+    {
+      "name": "09 — Instructor cannot enroll (403)",
+      "request": {
+        "method": "POST", "url": "{{baseUrl}}/enrollments",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{instructorToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"courseId\": {{courseId}}, \"method\": \"card\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Forbidden', () => pm.response.to.have.status(403));"] } }]
+    },
+    {
+      "name": "10 — PAUSE for SQL screenshots; student 2 rollback demo (500)",
+      "request": {
+        "description": "Run docs/ismail-rollback-check.sql before AND after this request. Screenshot identical seats, enrollments and payments, plus this 500 response.",
+        "method": "POST", "url": "{{baseUrl}}/enrollments",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{student2Token}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"courseId\": {{courseId}}, \"method\": \"nagad\", \"simulateFailure\": true}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Simulated failure', () => pm.response.to.have.status(500));",
+        "pm.test('Rollback error message', () => pm.expect(pm.response.json().message).to.equal('Simulated payment failure: transaction rolled back'));"
+      ] } }]
+    },
+    {
+      "name": "11 — Student 2 retries successfully; seats 1 to 0 (201)",
+      "request": {
+        "method": "POST", "url": "{{baseUrl}}/enrollments",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{student2Token}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"courseId\": {{courseId}}, \"method\": \"nagad\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Created', () => pm.response.to.have.status(201));",
+        "pm.test('Last seat taken', () => { const body = pm.response.json(); pm.expect(body.course.availableSeats).to.equal(0); pm.expect(body.payment.method).to.equal('nagad'); });"
+      ] } }]
+    },
+    {
+      "name": "12 — Student 3 cannot enroll in full course (400)",
+      "request": {
+        "method": "POST", "url": "{{baseUrl}}/enrollments",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{student3Token}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"courseId\": {{courseId}}, \"method\": \"card\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('No seats', () => pm.response.to.have.status(400));",
+        "pm.test('No seats message', () => pm.expect(pm.response.json().message).to.equal('No seats left in this course'));"
+      ] } }]
+    },
+    {
+      "name": "13 — Student reads own enrollments (200)",
+      "request": {
+        "method": "GET", "url": "{{baseUrl}}/enrollments/my",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }] }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('OK', () => pm.response.to.have.status(200));",
+        "pm.test('Course and payment included', () => { const rows = pm.response.json(); pm.expect(rows).to.be.an('array').that.is.not.empty; const enrollment = rows.find(row => row.course.id === Number(pm.variables.get('courseId'))); pm.expect(enrollment).to.exist; pm.expect(enrollment.payment.method).to.equal('bkash'); });"
+      ] } }]
+    },
+    {
+      "name": "14 — Admin reads paginated enrollments (200)",
+      "request": {
+        "method": "GET", "url": "{{baseUrl}}/enrollments?page=1&limit=10",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('OK', () => pm.response.to.have.status(200));",
+        "pm.test('Pagination metadata', () => { const body = pm.response.json(); pm.expect(body.data).to.be.an('array'); pm.expect(body.meta.page).to.equal(1); pm.expect(body.meta.limit).to.equal(10); pm.expect(body.meta.total).to.be.at.least(2); pm.expect(body.meta.totalPages).to.equal(Math.ceil(body.meta.total / 10)); });"
+      ] } }]
+    }
+  ]
+}
