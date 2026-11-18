@@ -19,6 +19,8 @@ import { LessonsService } from './lessons.service';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Lessons')
+@ApiBearerAuth()
 @Controller()
 export class LessonsController {
   constructor(private readonly lessonsService: LessonsService) {}

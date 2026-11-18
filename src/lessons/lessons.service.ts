@@ -45,6 +45,7 @@ async findByCourse(
     skip: (page - 1) * limit,
     take: limit,
     order: {
+      position: 'ASC',
       id: 'ASC',
     },
   });
