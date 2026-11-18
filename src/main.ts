@@ -33,7 +33,11 @@ async function bootstrap() {
 
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
+  console.log(`EduNest API running on http://localhost:${port}`);
+  console.log(`Swagger docs: http://localhost:${port}/api/docs`);
 }
+
 
 void bootstrap();
