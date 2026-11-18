@@ -6,6 +6,7 @@ import { CoursesService } from '../courses/courses.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { Lesson } from './lesson.entity';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 @Injectable()
 export class LessonsService {
@@ -27,13 +28,39 @@ export class LessonsService {
     return this.findOne(saved.id);
   }
 
-  async findByCourse(courseId: number): Promise<Lesson[]> {
-    await this.coursesService.findOne(courseId);
-    return this.lessonsRepo.find({
-      where: { course: { id: courseId } },
-      order: { position: 'ASC', id: 'ASC' },
-    });
-  }
+ 
+async findByCourse(
+  
+  courseId: number,
+  query: PaginationQueryDto,
+) { await this.coursesService.findOne(courseId);
+  const page = query.page ?? 1;
+  const limit = query.limit ?? 10;
+
+ const [data, total] =
+  await this.lessonsRepo.findAndCount({
+    where: {
+      course: { id: courseId },
+    },
+    skip: (page - 1) * limit,
+    take: limit,
+    order: {
+      position: 'ASC',
+      id: 'ASC',
+    },
+  });
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+
 
   async findOne(id: number): Promise<Lesson> {
     const lesson = await this.lessonsRepo.findOne({

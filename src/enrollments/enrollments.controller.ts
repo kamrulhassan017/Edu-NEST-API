@@ -5,7 +5,10 @@ import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { Role } from '../common/enums/role.enum';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { EnrollmentsService } from './enrollments.service';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Enrollments')
+@ApiBearerAuth()
 @Controller('enrollments')
 export class EnrollmentsController {
   constructor(private readonly enrollmentsService: EnrollmentsService) {}
